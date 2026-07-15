@@ -1,0 +1,14 @@
+{
+  "name": "nonin-scorecard-collector",
+  "version": "0.1.0",
+  "description": "Agentless network metrics collector that feeds the IT Uptime & Security Scorecard (syslog + availability probing + cloud connectors).",
+  "type": "module",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "seed": "node --disable-warning=ExperimentalWarning scripts/seed-demo.js"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Uptime &amp; Security Scorecard</title>
+<style>
+  :root{--bg:#f4f6fa;--panel:#fff;--panel-2:#f8fafc;--ink:#1a2330;--muted:#5b6675;--line:#e3e8ef;--line-strong:#cbd5e1;
+    --brand:#0a4b78;--brand-2:#1177b8;--good:#1a9e5f;--good-bg:#e7f6ee;--warn:#c9820a;--warn-bg:#fdf3e0;--bad:#cf3838;--bad-bg:#fbe9e9;
+    --shadow:0 1px 2px rgba(16,32,56,.06),0 4px 14px rgba(16,32,56,.06);--radius:14px}
+  html[data-theme="dark"]{--bg:#0d131c;--panel:#151d29;--panel-2:#111823;--ink:#e6ecf4;--muted:#96a3b5;--line:#243040;--line-strong:#33465c;
+    --brand:#4aa3e0;--brand-2:#63b6ee;--good:#3fca85;--good-bg:#123122;--warn:#e5a83a;--warn-bg:#3a2c10;--bad:#f0685f;--bad-bg:#3a1717;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45}
+  h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+  a{color:var(--brand-2);cursor:pointer}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px 64px}
+  header{background:linear-gradient(120deg,var(--brand),var(--brand-2));color:#fff;box-shadow:var(--shadow);position:sticky;top:0;z-index:30}
+  .hbar{max-width:1200px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hbar img{height:32px;background:#fff;padding:4px 7px;border-radius:8px}
+  .htext h1{font-size:16px;line-height:1.1}.htext p{margin:1px 0 0;font-size:11.5px;opacity:.85}
+  .hspace{flex:1}
+  nav{display:flex;gap:2px;flex-wrap:wrap}
+  nav a{color:#fff;opacity:.82;padding:6px 11px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none}
+  nav a:hover{opacity:1;background:rgba(255,255,255,.12)}
+  nav a.active{opacity:1;background:rgba(255,255,255,.2)}
+  .hctl{display:flex;align-items:center;gap:8px}
+  .hctl select{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;padding:5px 8px;font-size:12.5px}
+  .hctl select option{color:#000}
+  .status{display:flex;align-items:center;gap:6px;font-size:12px;background:rgba(255,255,255,.12);padding:5px 9px;border-radius:8px}
+  .sdot{width:9px;height:9px;border-radius:50%;background:#7CFC9E}.sdot.off{background:#f0685f}
+  .btn{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--brand-2);color:var(--brand-2)}
+  .btn.sm{padding:4px 9px;font-size:12px}.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}.btn.pri:hover{background:var(--brand-2);color:#fff}
+  .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}.btn.ghost:hover{background:rgba(255,255,255,.22)}
+  .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-top:18px}
+  .card>h2{font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:3px}
+  .card>h2 .ix{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--brand);color:#fff;font-size:14px;flex:none}
+  .sub{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--panel-2);position:relative;overflow:hidden}
+  .tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+  .tile .val{font-size:28px;font-weight:720;margin-top:4px;line-height:1;font-variant-numeric:tabular-nums}
+  .tile .val small{font-size:14px;font-weight:600;color:var(--muted)}
+  .tile .meta{font-size:12px;color:var(--muted);margin-top:6px}
+  .tile .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+  .tile.good .bar{background:var(--good)}.tile.warn .bar{background:var(--warn)}.tile.bad .bar{background:var(--bad)}.tile.neutral .bar{background:var(--brand-2)}
+  .tile.click{cursor:pointer}.tile.click:hover{border-color:var(--brand-2)}
+  .scoreband{display:grid;grid-template-columns:190px 1fr;gap:22px;align-items:center}
+  @media(max-width:640px){.scoreband{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:650;cursor:default}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.rowlink:hover td{background:var(--panel-2);cursor:pointer}
+  .badge{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;white-space:nowrap}
+  .badge.good{background:var(--good-bg);color:var(--good)}.badge.warn{background:var(--warn-bg);color:var(--warn)}.badge.bad{background:var(--bad-bg);color:var(--bad)}
+  .badge.live{background:var(--good-bg);color:var(--good)}.badge.manual{background:var(--warn-bg);color:var(--warn)}
+  .disk-row{display:flex;align-items:center;gap:12px;margin:11px 0}
+  .disk-row .dn{width:230px;font-size:12.5px;font-weight:600}.disk-row .dn small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+  .track{flex:1;height:22px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .fill{height:100%;border-radius:6px 0 0 6px}.disk-row .pct{width:66px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;font-size:13px}
+  .src{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--panel-2)}
+  .src h4{font-size:13.5px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line)}.kv b{font-variant-numeric:tabular-nums}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .row input,.row select{padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--ink);font-size:13px;font-family:inherit}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field input,.field select,.field textarea{padding:9px 11px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--ink);font-size:14px;font-family:inherit;width:100%}
+  .banner{background:var(--bad-bg);border:1px solid var(--bad);color:var(--bad);border-radius:12px;padding:12px 16px;margin-top:16px;font-size:13px}
+  .banner b{display:block;margin-bottom:4px}
+  .banner ul{margin:4px 0 0;padding-left:18px}
+  .legend{font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}.dot{width:10px;height:10px;border-radius:3px}
+  .steps{counter-reset:s;margin:0;padding:0;list-style:none}
+  .steps li{position:relative;padding:0 0 14px 34px;border-left:2px solid var(--line);margin-left:12px}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:-13px;top:-2px;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .ok{color:var(--good);font-weight:600}.no{color:var(--bad);font-weight:600}
+  .pager{display:flex;gap:8px;align-items:center;margin-top:12px}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:50}
+  .modal{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);max-width:640px;width:92%;max-height:86vh;overflow:auto;padding:22px}
+  @media print{header,.no-print{display:none!important}section.card{box-shadow:none;break-inside:avoid}body{background:#fff}
+    .fill,.tile .bar,.badge{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <img src="logo.webp" alt="Nonin">
+    <div class="htext"><h1>IT Uptime &amp; Security Scorecard</h1><p id="orgline">Live collector</p></div>
+    <div class="hspace"></div>
+    <div class="hctl no-print">
+      <div class="status"><span class="sdot" id="sdot"></span><span id="statusTxt">…</span></div>
+      <select id="periodSel"></select>
+      <button class="btn ghost sm" id="themeBtn">◐</button>
+      <button class="btn ghost sm" id="logoutBtn">Sign out</button>
+    </div>
+  </div>
+  <div class="hbar" style="padding-top:0">
+    <nav id="nav"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="banner"></div>
+  <div id="main"></div>
+</div>
+<div id="modal"></div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Math.round(n).toLocaleString();
+const fmt2 = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ragUp = (v, t = 99.5) => v >= t ? 'good' : v >= t - 1 ? 'warn' : 'bad';
+const ragDisk = (v) => v == null ? 'neutral' : v < 70 ? 'good' : v <= 85 ? 'warn' : 'bad';
+const ragIdx = (v) => v >= 90 ? 'good' : v >= 75 ? 'warn' : 'bad';
+const ragCol = (r) => ({ good: 'var(--good)', warn: 'var(--warn)', bad: 'var(--bad)', neutral: 'var(--brand-2)' }[r] || 'var(--brand-2)');
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (r.status === 401) { location.href = '/login.html'; throw new Error('auth'); }
+  if (!r.ok) throw new Error(path + ' ' + r.status);
+  return r.json();
+}
+
+let period = null, scorecard = null, health = null;
+const VIEWS = [
+  ['overview', 'Overview'], ['machines', 'Machines'], ['slas', 'SLAs'],
+  ['events', 'Events & Incidents'], ['disk', 'Disk'], ['dashboards', 'Dashboards'],
+  ['setup', 'Setup'], ['diagnostics', 'Diagnostics']
+];
+
+function tile(lab, val, rag, meta, onclick) {
+  const c = onclick ? ' click' : '';
+  return `<div class="tile ${rag}${c}" ${onclick ? `data-go="${onclick}"` : ''}><div class="bar"></div>
+    <div class="lab">${lab}</div><div class="val">${val}</div><div class="meta">${meta || ''}</div></div>`;
+}
+function gauge(val, rag, label = 'Health Index') {
+  const r = 64, circ = Math.PI * r, frac = Math.max(0, Math.min(100, val)) / 100, col = ragCol(rag);
+  return `<svg viewBox="0 0 160 108" width="100%" style="max-width:190px">
+    <path d="M16 80 A64 64 0 0 1 144 80" fill="none" stroke="var(--line)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M16 80 A64 64 0 0 1 144 80" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - frac)}"/>
+    <text x="80" y="72" text-anchor="middle" font-size="30" font-weight="720" fill="var(--ink)">${Math.round(val)}</text>
+    <text x="80" y="92" text-anchor="middle" font-size="11" fill="var(--muted)">${label}</text></svg>`;
+}
+
+// ---------- header / status / banner ----------
+async function refreshStatus() {
+  try {
+    const h = await api('/api/health');
+    health = h;
+    $('sdot').className = 'sdot';
+    $('statusTxt').textContent = `live · ${fmt(h.syslog.parsed || 0)} logs · ${h.fleet.up}/${h.fleet.total} up`;
+    renderBanner(h.problems || []);
+  } catch { $('sdot').className = 'sdot off'; $('statusTxt').textContent = 'offline'; }
+}
+function renderBanner(problems) {
+  if (!problems.length) { $('banner').innerHTML = ''; return; }
+  $('banner').innerHTML = `<div class="banner"><b>⚠ ${problems.length} active collector problem(s) — action needed</b><ul>` +
+    problems.slice(0, 6).map((p) => `<li><b>${esc(p.component)}</b> ${esc(p.code)}: ${esc(p.message)} ${p.recurring ? '<span class="badge bad">RECURRING</span>' : ''} (${p.n}×)</li>`).join('') +
+    `</ul><a data-go="diagnostics">Open diagnostics →</a></div>`;
+}
+
+// ---------- views ----------
+async function viewOverview() {
+  scorecard = await api('/api/scorecard?period=' + encodeURIComponent(period));
+  const d = scorecard, u = d.uptime, disk = d.disks.worst, ev = d.events.totals, f = d.fleet;
+  const breaches = d.slas.filter((s) => s.breached).length;
+  let html = `<section class="card"><h2><span class="ix">★</span> Scorecard Summary</h2>
+    <div class="sub">${esc(d.org)} — ${d.period} · generated ${new Date(d.generatedAt).toLocaleString()}</div>
+    <div class="scoreband"><div>${gauge(d.health.index, ragIdx(d.health.index))}</div>
+    <div class="tiles">
+      ${tile('System Uptime', fmt2(u.uptimePct) + '<small>%</small>', ragUp(u.uptimePct, u.uptimeTargetPct), `${u.hrsDown}h down · target ${u.uptimeTargetPct}%`)}
+      ${tile('Outage Notices', fmt(d.incidents.total), d.incidents.total ? 'warn' : 'good', `T1 ${d.incidents.tiers[1] || 0} · T2 ${d.incidents.tiers[2] || 0} · T3 ${d.incidents.tiers[3] || 0}`, 'events')}
+      ${tile('Events Analyzed', fmt(ev.dp), 'neutral', `${fmt(ev.esc)} esc · ${fmt(ev.int)} interventions`)}
+      ${tile('Peak Disk', disk.pct == null ? '—' : fmt2(disk.pct) + '<small>%</small>', ragDisk(disk.pct), esc(disk.name), 'disk')}
+    </div></div></section>`;
+
+  html += `<section class="card"><h2><span class="ix">▦</span> Fleet</h2>
+    <div class="sub">${f.total} monitored machines. Click a problem tile to investigate.</div>
+    <div class="tiles">
+      ${tile('Machines Up', `${f.up}<small>/${f.total}</small>`, f.up === f.total ? 'good' : 'neutral', 'Reachable')}
+      ${tile('Machines Down', fmt(f.down), f.down ? 'bad' : 'good', 'Not responding', f.down ? 'machines?status=down' : null)}
+      ${tile('Critical Down', fmt(f.criticalDown), f.criticalDown ? 'bad' : 'good', 'Critical assets', f.criticalDown ? 'machines?status=critical-down' : null)}
+      ${tile('SLA Breaches', fmt(breaches), breaches ? 'bad' : 'good', `${d.slas.length} SLAs tracked`, 'slas')}
+    </div></section>`;
+
+  if (d.customMetrics.length) html += `<section class="card"><h2><span class="ix">∑</span> Custom Metrics</h2>
+    <div class="tiles">${d.customMetrics.map((m) => tile(m.name, fmt(m.value), 'neutral', m.unit)).join('')}</div></section>`;
+  $('main').innerHTML = html;
+}
+
+async function viewMachines(query) {
+  const params = new URLSearchParams(query || '');
+  const status = params.get('status') || '';
+  const group = params.get('group') || '';
+  const search = params.get('search') || '';
+  const offset = parseInt(params.get('offset') || '0', 10);
+  const { groups } = await api('/api/groups');
+  const data = await api(`/api/machines?status=${status}&group=${encodeURIComponent(group)}&search=${encodeURIComponent(search)}&limit=50&offset=${offset}`);
+  const opt = (v, t, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${t}</option>`;
+  let html = `<section class="card"><h2><span class="ix">▦</span> Machines <span class="sub" style="margin:0 0 0 8px">${data.total} matching</span></h2>
+    <div class="row no-print">
+      <select id="mStatus">${opt('', 'All statuses', status)}${opt('down', 'Down', status)}${opt('critical-down', 'Critical down', status)}${opt('up', 'Up', status)}</select>
+      <select id="mGroup">${opt('', 'All groups', group)}${groups.map((g) => opt(g, g, group)).join('')}</select>
+      <input id="mSearch" placeholder="Search name/host" value="${esc(search)}" style="flex:1;min-width:160px">
+      <button class="btn sm" id="mApply">Filter</button>
+    </div>
+    <table><thead><tr><th>Machine</th><th>Group</th><th>Status</th><th class="num">Latency</th><th class="num">Fails</th><th>Since</th></tr></thead><tbody>`;
+  html += data.rows.map((r) => `<tr class="rowlink" data-machine="${esc(r.name)}">
+      <td><b>${esc(r.name)}</b><br><span class="sub" style="margin:0">${esc(r.host)}:${r.port}${r.critical ? ' · <b>critical</b>' : ''}</span></td>
+      <td>${esc(r.grp || '—')}</td>
+      <td><span class="badge ${r.up ? 'good' : 'bad'}">${r.up ? 'UP' : 'DOWN'}</span></td>
+      <td class="num">${r.latency_ms == null ? '—' : Math.round(r.latency_ms) + 'ms'}</td>
+      <td class="num">${r.consecutive_fails || 0}</td>
+      <td>${r.last_change ? new Date(r.last_change).toLocaleString() : '—'}</td></tr>`).join('')
+    || `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No machines match. (New installs populate after the first probe cycle.)</td></tr>`;
+  html += `</tbody></table>`;
+  const pages = Math.ceil(data.total / 50);
+  if (pages > 1) { const cur = offset / 50;
+    html += `<div class="pager no-print">
+      <button class="btn sm" ${cur <= 0 ? 'disabled' : ''} data-go="machines?status=${status}&group=${group}&search=${search}&offset=${Math.max(0, offset - 50)}">← Prev</button>
+      <span class="sub" style="margin:0">Page ${cur + 1} / ${pages}</span>
+      <button class="btn sm" ${cur >= pages - 1 ? 'disabled' : ''} data-go="machines?status=${status}&group=${group}&search=${search}&offset=${offset + 50}">Next →</button></div>`; }
+  html += `</section>`;
+  $('main').innerHTML = html;
+  $('mApply')?.addEventListener('click', () => {
+    location.hash = `machines?status=${$('mStatus').value}&group=${encodeURIComponent($('mGroup').value)}&search=${encodeURIComponent($('mSearch').value)}`;
+  });
+  document.querySelectorAll('[data-machine]').forEach((el) => el.addEventListener('click', () => showMachine(el.dataset.machine)));
+}
+
+async function showMachine(name) {
+  const d = await api('/api/machines/' + encodeURIComponent(name));
+  const s = d.status;
+  $('modal').innerHTML = `<div class="modal-bg" id="mb"><div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2>${esc(name)}</h2><button class="btn sm" id="mClose">✕</button></div>
+    <div class="sub">${esc(s.host)}:${s.port} · ${esc(s.grp || '—')} · ${s.critical ? 'critical' : 'non-critical'} · ${esc(s.os || '')}</div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+      ${tile('Status', s.up ? 'UP' : 'DOWN', s.up ? 'good' : 'bad', `${s.consecutive_fails || 0} consecutive fails`)}
+      ${tile('24h Availability', d.availability24h == null ? '—' : fmt2(d.availability24h) + '%', ragUp(d.availability24h || 0), '')}
+      ${tile('Latency', s.latency_ms == null ? '—' : Math.round(s.latency_ms) + 'ms', 'neutral', '')}
+    </div>
+    <h4 style="margin:16px 0 6px">Recent events (this host)</h4>
+    <table><thead><tr><th>Time</th><th>Category</th><th>Message</th></tr></thead><tbody>
+    ${d.events.map((e) => `<tr><td>${new Date(e.ts).toLocaleString()}</td><td>${esc(e.category)}</td><td>${esc((e.message || '').slice(0, 80))}</td></tr>`).join('')
+      || '<tr><td colspan="3" style="text-align:center;color:var(--muted)">No forwarded events for this host yet.</td></tr>'}
+    </tbody></table></div></div>`;
+  $('mb').addEventListener('click', (e) => { if (e.target.id === 'mb') $('modal').innerHTML = ''; });
+  $('mClose').addEventListener('click', () => $('modal').innerHTML = '');
+}
+
+async function viewSlas() {
+  scorecard = await api('/api/scorecard?period=' + encodeURIComponent(period));
+  const rows = scorecard.slas.map((s) => `<tr>
+    <td><b>${esc(s.name)}</b></td><td><span class="badge ${s.tier === 1 ? 'bad' : 'warn'}">Tier ${s.tier}</span></td>
+    <td class="num">${s.target}%</td>
+    <td class="num" style="color:${s.uptimePct == null ? 'var(--muted)' : ragCol(ragUp(s.uptimePct, s.target))};font-weight:700">${s.uptimePct == null ? '—' : fmt2(s.uptimePct) + '%'}</td>
+    <td class="num">${s.hrsDown}h</td><td>${s.members}</td>
+    <td>${s.breached ? '<span class="badge bad">BREACH</span>' : '<span class="badge good">MET</span>'}</td></tr>`).join('');
+  $('main').innerHTML = `<section class="card"><h2><span class="ix">◈</span> Service Level Agreements</h2>
+    <div class="sub">Per-application/group uptime targets. Defined in <span class="mono">config/collector.json → slas</span>. A service is "down" for a sample when ANY in-scope member is down.</div>
+    <table><thead><tr><th>SLA</th><th>Tier</th><th class="num">Target</th><th class="num">Actual</th><th class="num">Down</th><th>Members</th><th>Result</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="7" style="text-align:center;color:var(--muted)">No SLAs configured.</td></tr>'}</tbody></table></section>`;
+}
+
+async function viewEvents() {
+  scorecard = await api('/api/scorecard?period=' + encodeURIComponent(period));
+  const d = scorecard, names = { endpoint: 'Endpoint Security', ids: 'Intrusion Detection (Perch)', defender: 'Microsoft Defender' };
+  let html = `<section class="card"><h2><span class="ix">◎</span> Event Metrics</h2>
+    <div class="sub"><span class="badge live">LIVE</span> = from a connector · <span class="badge manual">MANUAL</span> = editable below.</div>
+    <div class="grid3">` + Object.entries(d.events.sources).map(([k, s]) => {
+      const live = (s.origin || '').includes('api');
+      return `<div class="src"><h4>${names[k]} ${live ? '<span class="badge live">LIVE</span>' : '<span class="badge manual">MANUAL</span>'}</h4>
+        <div class="kv">Data Points <b ${live ? '' : `contenteditable data-k="${k}" data-f="dp"`}>${fmt(s.dp)}</b></div>
+        <div class="kv">Escalations <b ${live ? '' : `contenteditable data-k="${k}" data-f="esc"`}>${fmt(s.esc)}</b></div>
+        <div class="kv" style="border:none">Interventions <b ${live ? '' : `contenteditable data-k="${k}" data-f="int"`}>${fmt(s.int)}</b></div>
+        ${live ? '' : `<button class="btn sm no-print" data-save="${k}" style="margin-top:8px">Save</button>`}</div>`;
+    }).join('') + `</div></section>`;
+
+  html += `<section class="card"><h2><span class="ix">✉</span> Incident Response — Outage Notices</h2>
+    <table><thead><tr><th>Date</th><th>Tier</th><th>Description</th><th class="no-print"></th></tr></thead><tbody>
+    ${d.incidents.notices.map((n) => `<tr><td>${new Date(n.ts).toLocaleDateString()}</td>
+      <td><span class="badge ${n.tier === 1 ? 'bad' : n.tier === 2 ? 'warn' : 'good'}">Tier ${n.tier}</span></td>
+      <td>${esc(n.description)}</td><td class="no-print"><button class="btn sm danger" data-del="${n.id}">✕</button></td></tr>`).join('')
+      || '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No notices logged.</td></tr>'}
+    </tbody></table>
+    <div class="row no-print"><input type="date" id="nDate">
+      <select id="nTier"><option value="1">Tier 1 — Critical</option><option value="2" selected>Tier 2 — Major</option><option value="3">Tier 3 — Minor</option></select>
+      <input id="nDesc" placeholder="Impacted resource / summary" style="flex:1;min-width:180px">
+      <button class="btn sm" id="addNotice">+ Add</button></div></section>`;
+  $('main').innerHTML = html;
+
+  document.querySelectorAll('[data-save]').forEach((b) => b.addEventListener('click', async () => {
+    const k = b.dataset.save, get = (f) => parseInt(document.querySelector(`[data-k="${k}"][data-f="${f}"]`).textContent.replace(/[^0-9]/g, '')) || 0;
+    await api('/api/event-metrics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ period, source: k, dp: get('dp'), esc: get('esc'), int: get('int') }) });
+    route();
+  }));
+  $('addNotice').addEventListener('click', async () => {
+    await api('/api/notices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date: $('nDate').value, tier: $('nTier').value, description: $('nDesc').value }) });
+    route();
+  });
+  document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => { await fetch('/api/notices/' + b.dataset.del, { method: 'DELETE' }); route(); }));
+}
+
+async function viewDisk() {
+  scorecard = await api('/api/scorecard?period=' + encodeURIComponent(period));
+  const d = scorecard;
+  let html = `<section class="card"><h2><span class="ix">▤</span> Disk Utilization</h2>
+    <div class="sub">Latest capacity per array (SNMP / REST poll / syslog alert / manual). Origin shown per row.</div>` +
+    d.disks.sans.map((s) => { const pct = s.usedPct == null ? 0 : Math.min(100, s.usedPct), col = ragCol(ragDisk(s.usedPct));
+      return `<div class="disk-row"><div class="dn">${esc(s.name)}<small>${s.usedTB == null ? 'no data' : `${fmt2(s.usedTB)} / ${fmt2(s.totalTB)} TB`}${s.origin ? ' · ' + s.origin : ''}</small></div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pct" style="color:${col}">${s.usedPct == null ? '—' : fmt2(s.usedPct) + '%'}</div></div>`; }).join('') +
+    `<div class="legend"><span><i class="dot" style="background:var(--good)"></i> &lt;70%</span><span><i class="dot" style="background:var(--warn)"></i> 70–85%</span><span><i class="dot" style="background:var(--bad)"></i> &gt;85%</span></div>
+    <div class="row no-print"><select id="dArray">${d.disks.sans.map((s) => `<option>${esc(s.name)}</option>`).join('')}</select>
+      <input type="number" id="dUsed" placeholder="Used TB" step="0.1" style="width:110px">
+      <input type="number" id="dTotal" placeholder="Total TB" step="0.1" style="width:110px">
+      <button class="btn sm" id="pushDisk">Update</button>
+      <span class="sub" style="margin:0">Manual entry (e.g. SwICE figures) when no live poll is set.</span></div></section>`;
+  $('main').innerHTML = html;
+  $('pushDisk').addEventListener('click', async () => {
+    await api('/api/disk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ array: $('dArray').value, usedTB: parseFloat($('dUsed').value) || 0, totalTB: parseFloat($('dTotal').value) || 0 }) });
+    route();
+  });
+}
+
+async function viewDashboards() {
+  const { dashboards } = await api('/api/dashboards');
+  const { catalog } = await api('/api/widget-catalog');
+  scorecard = await api('/api/scorecard?period=' + encodeURIComponent(period));
+  const cmOpts = scorecard.customMetrics.map((m) => `<option value="custom:${m.id}">${esc(m.name)}</option>`).join('');
+  let html = `<section class="card"><h2><span class="ix">▧</span> Custom Dashboards</h2>
+    <div class="sub">Compose views from built-in KPIs and your custom metrics.</div>`;
+  if (!dashboards.length) html += `<p class="sub">No dashboards yet — create one below.</p>`;
+  for (const db of dashboards) {
+    html += `<h3 style="margin-top:14px">${esc(db.name)} <button class="btn sm danger no-print" data-deldash="${db.id}">Delete</button></h3>
+      <div class="tiles">${db.widgets.map((w) => renderWidget(w)).join('') || '<span class="sub">No widgets.</span>'}</div>
+      <div class="row no-print"><select data-add="${db.id}">${catalog.map((c) => `<option value="${c.key}">${c.label}</option>`).join('')}${cmOpts}</select>
+        <button class="btn sm" data-addbtn="${db.id}">+ Add widget</button></div>`;
+  }
+  html += `<div class="row no-print" style="margin-top:18px"><input id="newDash" placeholder="New dashboard name"><button class="btn pri sm" id="createDash">Create dashboard</button></div></section>`;
+  $('main').innerHTML = html;
+  $('createDash').addEventListener('click', async () => { const name = $('newDash').value.trim(); if (!name) return;
+    await api('/api/dashboards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, widgets: [] }) }); route(); });
+  document.querySelectorAll('[data-deldash]').forEach((b) => b.addEventListener('click', async () => { await fetch('/api/dashboards/' + b.dataset.deldash, { method: 'DELETE' }); route(); }));
+  document.querySelectorAll('[data-addbtn]').forEach((b) => b.addEventListener('click', async () => {
+    const id = b.dataset.addbtn, key = document.querySelector(`[data-add="${id}"]`).value;
+    const db = await api('/api/dashboards/' + id); db.widgets.push({ key });
+    await api('/api/dashboards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(db) }); route();
+  }));
+}
+function getPath(obj, path) { return path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj); }
+function renderWidget(w) {
+  const d = scorecard;
+  if (w.key === 'sla') return `<div class="tile neutral" style="grid-column:span 2"><div class="bar"></div><div class="lab">SLA Attainment</div>
+    <div style="margin-top:8px">${d.slas.map((s) => `${esc(s.name)}: <b style="color:${s.breached ? 'var(--bad)' : 'var(--good)'}">${s.uptimePct ?? '—'}%</b>`).join('<br>')}</div></div>`;
+  if (w.key === 'health.index') return `<div class="tile"><div class="bar"></div><div class="lab">Health Index</div>${gauge(d.health.index, ragIdx(d.health.index), '')}</div>`;
+  if (w.key && w.key.startsWith('custom:')) { const m = d.customMetrics.find((x) => x.id === w.key.slice(7)); return tile(m ? m.name : 'Custom', m ? fmt(m.value) : '—', 'neutral', m ? m.unit : ''); }
+  const map = { 'uptime.uptimePct': ['System Uptime %', (v) => fmt2(v) + '%'], 'incidents.total': ['Outage Notices', fmt], 'events.totals.dp': ['Events Analyzed', fmt], 'events.totals.int': ['Interventions', fmt], 'disks.worst.pct': ['Peak Disk %', (v) => v == null ? '—' : fmt2(v) + '%'], 'fleet.down': ['Machines Down', fmt] };
+  const m = map[w.key]; if (!m) return tile(w.key, '—', 'neutral', '');
+  return tile(m[0], m[1](getPath(d, w.key)), 'neutral', '');
+}
+
+async function viewSetup() {
+  const c = await api('/api/connectors');
+  $('main').innerHTML = `
+  <section class="card"><h2><span class="ix">⚙</span> Microsoft Defender — Onboarding Wizard</h2>
+    <div class="sub">Connect to Microsoft 365 to pull Defender incident metrics via the Graph Security API.</div>
+    <ol class="steps">
+      <li><b>Register an app</b> in Entra ID (Azure AD) → App registrations → New registration.</li>
+      <li><b>Add API permission</b>: Microsoft Graph → Application permissions → <span class="mono">SecurityIncident.Read.All</span>, then click <b>Grant admin consent</b>.</li>
+      <li><b>Create a client secret</b> under Certificates &amp; secrets and copy the value.</li>
+      <li><b>Paste the three values below</b> and test the connection.</li>
+    </ol>
+    <div class="field"><label>Directory (tenant) ID</label><input id="dTenant" placeholder="${c.defender.tenantId || 'xxxxxxxx-xxxx-…'}"></div>
+    <div class="field"><label>Application (client) ID</label><input id="dClient" placeholder="app id"></div>
+    <div class="field"><label>Client secret ${c.defender.configured ? '(leave blank to keep saved)' : ''}</label><input id="dSecret" type="password" placeholder="secret value"></div>
+    <div class="row"><button class="btn" id="dTest">Test connection</button>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="dEnabled" ${c.defender.enabled ? 'checked' : ''}> Enable polling</label>
+      <button class="btn pri" id="dSave">Save</button></div>
+    <div id="dResult" class="sub" style="margin-top:10px"></div>
+    <p class="sub" style="margin-top:12px"><b>No API access?</b> Use the log-connector path instead: forward Defender/Sentinel alerts to this collector's syslog (udp/tcp 514) via a Sentinel/Logic App or your SIEM, and enter Endpoint numbers manually under Events.</p>
+  </section>
+
+  <section class="card"><h2><span class="ix">◱</span> Perch / ConnectWise SIEM (IDS)</h2>
+    <div class="field"><label>API base URL</label><input id="pBase" placeholder="https://…"></div>
+    <div class="field"><label>API token ${c.perch.configured ? '(saved)' : ''}</label><input id="pToken" type="password"></div>
+    <div class="row"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="pEnabled" ${c.perch.enabled ? 'checked' : ''}> Enable</label>
+      <button class="btn pri" id="pSave">Save</button></div><div id="pResult" class="sub" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card"><h2><span class="ix">✉</span> Email / SMTP Relay (reports &amp; alerts)</h2>
+    <div class="grid3">
+      <div class="field"><label>SMTP host</label><input id="sHost" value="${esc(c.smtp.host)}"></div>
+      <div class="field"><label>Port</label><input id="sPort" type="number" value="${c.smtp.port || 25}"></div>
+      <div class="field"><label>Security</label><select id="sSec"><option value="none" ${c.smtp.secure === 'none' ? 'selected' : ''}>None</option><option value="starttls" ${c.smtp.secure === 'starttls' ? 'selected' : ''}>STARTTLS</option><option value="tls" ${c.smtp.secure === 'tls' ? 'selected' : ''}>TLS</option></select></div>
+      <div class="field"><label>Auth user (optional)</label><input id="sUser"></div>
+      <div class="field"><label>Password (optional)</label><input id="sPass" type="password"></div>
+      <div class="field"><label>From</label><input id="sFrom" placeholder="scorecard@nonin.local"></div>
+    </div>
+    <div class="field"><label>Send reports/alerts to (comma-separated)</label><input id="sTo" placeholder="it@nonin.local, soc@nonin.local"></div>
+    <div class="row"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="sEnabled" ${c.smtp.emailEnabled ? 'checked' : ''}> Enable email delivery</label>
+      <button class="btn" id="sSave">Save</button><button class="btn" id="sTest">Send test</button></div>
+    <div id="sResult" class="sub" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card"><h2><span class="ix">🔑</span> Automation &amp; Account</h2>
+    <p class="sub">API token (for automation): <span class="mono">${c.apiToken}</span> — full value is in <span class="mono">data/secrets.json</span>. Send it as <span class="mono">X-Api-Token</span>.</p>
+    <div class="row"><input id="newPw" type="password" placeholder="New admin password (min 8)"><button class="btn" id="pwBtn">Change password</button><span id="pwResult" class="sub" style="margin:0"></span></div>
+  </section>`;
+
+  $('dTest').addEventListener('click', async () => { $('dResult').textContent = 'Testing…';
+    const r = await api('/api/connectors/defender/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tenantId: $('dTenant').value, clientId: $('dClient').value, clientSecret: $('dSecret').value }) });
+    $('dResult').innerHTML = r.ok ? `<span class="ok">✓ ${esc(r.message)}</span>` : `<span class="no">✗ ${esc(r.error)}</span>`; });
+  $('dSave').addEventListener('click', async () => {
+    await api('/api/connectors/defender/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tenantId: $('dTenant').value, clientId: $('dClient').value, clientSecret: $('dSecret').value, enabled: $('dEnabled').checked }) });
+    $('dResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
+  $('pSave').addEventListener('click', async () => {
+    await api('/api/connectors/perch/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base: $('pBase').value, token: $('pToken').value, enabled: $('pEnabled').checked }) });
+    $('pResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
+  const smtpBody = () => ({ host: $('sHost').value, port: $('sPort').value, secure: $('sSec').value, authUser: $('sUser').value, password: $('sPass').value, from: $('sFrom').value, to: $('sTo').value, enabled: $('sEnabled').checked });
+  $('sSave').addEventListener('click', async () => { await api('/api/smtp/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(smtpBody()) }); $('sResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
+  $('sTest').addEventListener('click', async () => { $('sResult').textContent = 'Sending…'; await api('/api/smtp/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(smtpBody()) });
+    const r = await api('/api/smtp/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+    $('sResult').innerHTML = r.ok ? '<span class="ok">✓ Sent</span>' : `<span class="no">✗ ${esc(r.error)}</span>`; });
+  $('pwBtn').addEventListener('click', async () => { const pw = $('newPw').value; if (pw.length < 8) { $('pwResult').textContent = 'min 8 chars'; return; }
+    await api('/api/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) }); $('pwResult').innerHTML = '<span class="ok">✓ Changed</span>'; });
+}
+
+async function viewDiagnostics() {
+  const d = await api('/api/diagnostics');
+  let html = `<section class="card"><h2><span class="ix">🩺</span> Self-Diagnostics</h2>
+    <div class="sub">The collector records and analyses its own failures (fail-out-loud + learning).</div>
+    <h4>Active problems (last hour)</h4>
+    <table><thead><tr><th>Component</th><th>Code</th><th>Message</th><th class="num">Count</th></tr></thead><tbody>
+    ${d.problems.map((p) => `<tr><td>${esc(p.component)}</td><td>${esc(p.code)}</td><td>${esc(p.message)}</td><td class="num">${p.n}${p.recurring ? ' <span class="badge bad">RECURRING</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--good)">No active problems ✓</td></tr>'}
+    </tbody></table>`;
+  if (d.insights.length) html += `<h4 style="margin-top:16px">Insights (learned from recurring failures, 24h)</h4>
+    <table><thead><tr><th>Component</th><th class="num">Occurrences</th><th>Suggested action</th></tr></thead><tbody>
+    ${d.insights.map((i) => `<tr><td>${esc(i.component)}</td><td class="num">${i.count}</td><td>${esc(i.suggestion)}</td></tr>`).join('')}</tbody></table>`;
+  html += `<h4 style="margin-top:16px">Recent system events</h4>
+    <table><thead><tr><th>Time</th><th>Level</th><th>Component</th><th>Message</th></tr></thead><tbody>
+    ${d.recent.slice(0, 60).map((e) => `<tr><td>${new Date(e.ts).toLocaleString()}</td><td><span class="badge ${e.level === 'error' ? 'bad' : e.level === 'warn' ? 'warn' : 'good'}">${e.level}</span></td><td>${esc(e.component)}</td><td>${esc(e.message)}</td></tr>`).join('')}
+    </tbody></table></section>`;
+  $('main').innerHTML = html;
+}
+
+// ---------- router ----------
+const RENDER = { overview: viewOverview, machines: viewMachines, slas: viewSlas, events: viewEvents, disk: viewDisk, dashboards: viewDashboards, setup: viewSetup, diagnostics: viewDiagnostics };
+async function route() {
+  const hash = location.hash.slice(1) || 'overview';
+  const [name, query] = hash.split('?');
+  document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.view === name));
+  try { await (RENDER[name] || viewOverview)(query); } catch (e) { if (e.message !== 'auth') $('main').innerHTML = `<section class="card"><b>Error:</b> ${esc(e.message)}</section>`; }
+}
+
+function buildNav() { $('nav').innerHTML = VIEWS.map(([v, l]) => `<a data-view="${v}" href="#${v}">${l}</a>`).join(''); }
+async function loadPeriods() {
+  const { periods } = await api('/api/periods');
+  $('periodSel').innerHTML = periods.map((p) => `<option>${p}</option>`).join('');
+  period = periods[0];
+}
+
+$('periodSel').addEventListener('change', (e) => { period = e.target.value; route(); });
+$('themeBtn').addEventListener('click', () => { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); });
+$('logoutBtn').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); location.href = '/login.html'; });
+document.addEventListener('click', (e) => { const go = e.target.closest('[data-go]'); if (go) { location.hash = go.dataset.go; } });
+window.addEventListener('hashchange', route);
+
+(async function init() {
+  buildNav();
+  await refreshStatus();
+  await loadPeriods();
+  await route();
+  setInterval(refreshStatus, 30000);
+})();
+</script>
+</body>
+</html>

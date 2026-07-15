@@ -1,0 +1,104 @@
+{
+  "org": "Nonin Medical, Inc.",
+  "http": { "port": 8080 },
+
+  "auth": {
+    "enabled": true,
+    "sessionTtlHours": 12,
+    "note": "First run: set ADMIN_PASSWORD env (or a random one is generated and printed ONCE to the log). Automation uses the X-Api-Token header; token is created on first run and stored in data/secrets.json."
+  },
+
+  "syslog": { "enabled": true, "udpPort": 514, "tcpPort": 514, "bind": "0.0.0.0" },
+
+  "database": { "path": "./data/scorecard.db" },
+
+  "businessHours": {
+    "timezoneOffsetMinutes": -360,
+    "days": [1, 2, 3, 4, 5],
+    "startHour": 8,
+    "endHour": 18,
+    "standardMonthlyHours": 240
+  },
+
+  "probe": {
+    "intervalSec": 60,
+    "timeoutMs": 3000,
+    "concurrency": 100,
+    "downAfterFails": 2,
+    "note": "concurrency caps simultaneous probes so thousands of hosts stay light. A host is 'down' only after downAfterFails consecutive failures (debounces blips).",
+    "targets": [
+      { "name": "DC01",       "host": "10.0.0.10", "port": 3389, "critical": true,  "os": "windows", "group": "Domain Controllers" },
+      { "name": "DC02",       "host": "10.0.0.11", "port": 3389, "critical": true,  "os": "windows", "group": "Domain Controllers" },
+      { "name": "FileServer", "host": "10.0.0.20", "port": 445,  "critical": true,  "os": "windows", "group": "File & Print" },
+      { "name": "AppLinux01", "host": "10.0.0.30", "port": 22,   "critical": false, "os": "linux",   "group": "Application Servers" },
+      { "name": "WebPortal",  "host": "10.0.0.40", "port": 443,  "critical": true,  "os": "linux",   "group": "Application Servers" }
+    ]
+  },
+
+  "groups": [
+    { "name": "Domain Controllers",  "description": "Active Directory / identity" },
+    { "name": "File & Print",        "description": "File servers and print services" },
+    { "name": "Application Servers", "description": "Line-of-business apps" }
+  ],
+
+  "slas": [
+    { "name": "Core Identity",  "tier": 1, "uptimeTarget": 99.9, "scope": { "groups": ["Domain Controllers"] } },
+    { "name": "File Services",  "tier": 2, "uptimeTarget": 99.5, "scope": { "groups": ["File & Print"] } },
+    { "name": "Business Apps",  "tier": 2, "uptimeTarget": 99.0, "scope": { "groups": ["Application Servers"] } }
+  ],
+
+  "sans": [
+    { "name": "SAN01-NIMBLE-PROD-13700", "type": "nimble", "syslogHost": "nimble-prod-13700" },
+    { "name": "SAN01-NIMBLE-COLO-USI",   "type": "nimble", "syslogHost": "nimble-colo-usi" },
+    { "name": "MSA",                     "type": "msa",    "syslogHost": "msa" }
+  ],
+
+  "scoring": {
+    "note": "Transparent, bounded Health Index. See README 'Health Index calibration'.",
+    "weights": { "uptime": 50, "disk": 25, "security": 25 },
+    "uptime": { "floorBelowTargetPct": 2.0 },
+    "disk": { "warnPct": 70, "critPct": 85 },
+    "security": {
+      "pointsPerIntervention": 8,
+      "maxInterventionPenalty": 60,
+      "escalationRatePer1000": 5,
+      "maxEscalationPenalty": 40
+    }
+  },
+
+  "connectors": {
+    "defender": { "enabled": false, "pollIntervalMin": 60 },
+    "perch":    { "enabled": false, "pollIntervalMin": 240 },
+    "snmp":     { "enabled": false, "pollIntervalMin": 30, "community": "public", "timeoutMs": 2000 }
+  },
+
+  "reporting": {
+    "schedules": [
+      { "name": "Monthly executive report", "cron": "0 8 1 * *", "period": "previous", "deliver": ["local"] }
+    ],
+    "destinations": {
+      "local": { "enabled": true, "dir": "./data/reports" },
+      "http":  { "enabled": false, "url": "", "method": "PUT" },
+      "email": { "enabled": false, "to": [], "from": "scorecard@nonin.local", "subjectPrefix": "[IT Scorecard]" }
+    },
+    "smtp": { "host": "", "port": 25, "secure": "none", "authUser": "", "note": "secure: none|starttls|tls. Password via SMTP_PASSWORD env or the wizard." }
+  },
+
+  "alerts": {
+    "onSlaBreach": true,
+    "onMachineDown": true,
+    "onCollectorFailure": true,
+    "minMinutesBetweenSame": 60
+  },
+
+  "selfMonitor": {
+    "backoffBaseSec": 60,
+    "backoffMaxSec": 3600,
+    "recurringThreshold": 5
+  },
+
+  "customMetrics": [
+    { "id": "failed-logons", "name": "Failed Logons (4625)", "match": { "eventId": 4625 }, "unit": "events" },
+    { "id": "unexpected-reboots", "name": "Unexpected Reboots", "match": { "category": "shutdown_unexpected" }, "unit": "events" }
+  ]
+}

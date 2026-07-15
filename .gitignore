@@ -1,0 +1,9 @@
+data/
+dist/
+installer/payload/
+node_modules/
+*.db
+*.db-wal
+*.db-shm
+.env
+# secrets are stored under data/ (already ignored) — never commit secrets.json

@@ -1,0 +1,32 @@
+services:
+  collector:
+    build: .
+    container_name: nonin-scorecard-collector
+    restart: unless-stopped
+    ports:
+      - "8080:8080"        # Scorecard UI + REST API (put a TLS reverse proxy in front to expose)
+      - "514:514/udp"      # syslog (UDP) — Linux / SANs / network gear / WEF forwarders
+      - "514:514/tcp"      # syslog (TCP)
+    volumes:
+      - ./data:/data                       # SQLite DB, secrets.json, generated reports (persisted)
+      - ./config:/app/config:ro            # collector.json — edit targets/SLAs/SANs here
+    environment:
+      # ---- Auth ----
+      ADMIN_PASSWORD: ""                   # set to control the first-run admin password (else printed once to logs)
+      AUTH_ENABLED: "true"
+      # ---- Microsoft Defender (Graph Security API) — or configure via the in-app wizard ----
+      CONNECTOR_DEFENDER_ENABLED: "false"
+      GRAPH_TENANT_ID: ""
+      GRAPH_CLIENT_ID: ""
+      GRAPH_CLIENT_SECRET: ""
+      # ---- Perch / ConnectWise SIEM ----
+      CONNECTOR_PERCH_ENABLED: "false"
+      PERCH_API_BASE: ""
+      PERCH_API_TOKEN: ""
+      # ---- SMTP relay (reports & alerts) — or configure via the in-app wizard ----
+      SMTP_PASSWORD: ""
+      # ---- Report HTTP upload target (optional) ----
+      REPORT_HTTP_TOKEN: ""
+      # ---- SAN REST creds (optional; name upper-cased, non-alphanumerics -> _) ----
+      # SAN_SAN01_NIMBLE_PROD_13700_URL: "https://..."
+      # SAN_SAN01_NIMBLE_PROD_13700_TOKEN: "..."
