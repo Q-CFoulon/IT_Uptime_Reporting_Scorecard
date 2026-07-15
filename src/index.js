@@ -7,6 +7,7 @@ import { startApi } from './api.js';
 import { pollDefender } from './connectors/graph.js';
 import { pollPerch } from './connectors/perch.js';
 import { pollSans } from './connectors/san.js';
+import { pollAzureMonitor } from './connectors/azuremonitor.js';
 import { initSelfMonitor, fail, ok, backoffSec } from './selfmonitor.js';
 import { initReporting, startScheduler, alert } from './reporting.js';
 import { buildScorecard } from './aggregate.js';
@@ -43,7 +44,7 @@ startProber(cfg, {
 });
 
 // ---- connectors with adaptive backoff + fail-out-loud ----
-const connectorState = { defender: {}, perch: {}, san: {} };
+const connectorState = { defender: {}, perch: {}, san: {}, azuremonitor: {} };
 function scheduleConnector(name, fn, baseIntervalMin) {
   const component = `connector:${name}`;
   const run = async () => {
@@ -66,6 +67,7 @@ function scheduleConnector(name, fn, baseIntervalMin) {
 scheduleConnector('defender', pollDefender, cfg.connectors.defender.pollIntervalMin);
 scheduleConnector('perch', pollPerch, cfg.connectors.perch.pollIntervalMin);
 scheduleConnector('san', pollSans, cfg.connectors.snmp.pollIntervalMin);
+scheduleConnector('azuremonitor', pollAzureMonitor, cfg.connectors.azureMonitor.pollIntervalMin);
 
 // ---- periodic SLA-breach / critical-down alerting ----
 setInterval(() => {

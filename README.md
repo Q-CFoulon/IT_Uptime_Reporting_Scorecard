@@ -144,6 +144,25 @@ Test:
 printf '<11>1 2026-06-15T09:00:00Z DC01 EventLog - - - EventID=6008 previous shutdown unexpected' | nc -u -w1 <server> 514
 ```
 
+### Azure Monitor Agent (AMA) — pull instead of forward
+For Azure VMs, Arc-enabled servers, or anything already onboarded to a **Log Analytics
+workspace**, the collector can *pull* the agent's data instead of receiving forwarded syslog —
+handy for cloud hosts the collector can't TCP-probe. Configure it in **Setup → Azure Monitor**
+(or `config.connectors.azureMonitor` + `AZURE_*` env):
+
+1. Give an Entra app (the Defender app is fine) the **Log Analytics Reader** role on the workspace.
+2. Enter tenant/client/secret + **Workspace ID**, test, enable.
+
+It polls every `pollIntervalMin` (default 10) and ingests:
+- **`Heartbeat`** → each `Computer` becomes a machine in the fleet (group "Azure Monitor"),
+  up/down by last-heartbeat age (`heartbeatDownAfterMin`, default 15).
+- **`Event`** (Windows) → the events table, classified by `EventID` (same map as syslog).
+- **`Syslog`** (Linux) → the events table, classified by message.
+
+Ingested events flow into per-machine detail, custom metrics, and the security-events count.
+> Note: if a host is *both* TCP-probed and Azure-monitored, keep the probe `name` and the AMA
+> `Computer` name identical to avoid it appearing twice in the fleet.
+
 ---
 
 ## 7. SLAs

@@ -388,6 +388,24 @@ async function viewSetup() {
     <p class="sub" style="margin-top:12px"><b>No API access?</b> Use the log-connector path instead: forward Defender/Sentinel alerts to this collector's syslog (udp/tcp 514) via a Sentinel/Logic App or your SIEM, and enter Endpoint numbers manually under Events.</p>
   </section>
 
+  <section class="card"><h2><span class="ix">☁</span> Azure Monitor — machine log ingestion</h2>
+    <div class="sub">Pull machine logs collected by the Azure Monitor Agent (AMA) from a Log Analytics workspace: <b>Heartbeat</b> (fleet availability for cloud/Arc VMs), <b>Event</b> (Windows), and <b>Syslog</b> (Linux).</div>
+    <ol class="steps">
+      <li><b>Reuse or register an Entra app</b> (the Defender app works if you add the role below).</li>
+      <li><b>Assign role</b> <span class="mono">Log Analytics Reader</span> to the app on the target Log Analytics workspace (Access control / IAM).</li>
+      <li><b>Copy the workspace ID</b> (Log Analytics workspace → Overview → Workspace ID).</li>
+      <li><b>Enter values and test.</b></li>
+    </ol>
+    <div class="field"><label>Directory (tenant) ID</label><input id="azTenant" placeholder="${c.azureMonitor.tenantId || 'defaults to the Defender tenant if blank'}"></div>
+    <div class="field"><label>Application (client) ID</label><input id="azClient" placeholder="app id"></div>
+    <div class="field"><label>Client secret ${c.azureMonitor.configured ? '(leave blank to keep saved)' : ''}</label><input id="azSecret" type="password" placeholder="secret value"></div>
+    <div class="field"><label>Log Analytics Workspace ID</label><input id="azWs" value="${esc(c.azureMonitor.workspaceId)}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+    <div class="row"><button class="btn" id="azTest">Test connection</button>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="azEnabled" ${c.azureMonitor.enabled ? 'checked' : ''}> Enable ingestion</label>
+      <button class="btn pri" id="azSave">Save</button></div>
+    <div id="azResult" class="sub" style="margin-top:10px"></div>
+  </section>
+
   <section class="card"><h2><span class="ix">◱</span> Perch / ConnectWise SIEM (IDS)</h2>
     <div class="field"><label>API base URL</label><input id="pBase" placeholder="https://…"></div>
     <div class="field"><label>API token ${c.perch.configured ? '(saved)' : ''}</label><input id="pToken" type="password"></div>
@@ -424,6 +442,13 @@ async function viewSetup() {
   $('pSave').addEventListener('click', async () => {
     await api('/api/connectors/perch/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base: $('pBase').value, token: $('pToken').value, enabled: $('pEnabled').checked }) });
     $('pResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
+  const azBody = () => ({ tenantId: $('azTenant').value, clientId: $('azClient').value, clientSecret: $('azSecret').value, workspaceId: $('azWs').value, enabled: $('azEnabled').checked });
+  $('azTest').addEventListener('click', async () => { $('azResult').textContent = 'Testing…';
+    const r = await api('/api/connectors/azuremonitor/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(azBody()) });
+    $('azResult').innerHTML = r.ok ? `<span class="ok">✓ ${esc(r.message)}</span>` : `<span class="no">✗ ${esc(r.error)}</span>`; });
+  $('azSave').addEventListener('click', async () => {
+    await api('/api/connectors/azuremonitor/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(azBody()) });
+    $('azResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
   const smtpBody = () => ({ host: $('sHost').value, port: $('sPort').value, secure: $('sSec').value, authUser: $('sUser').value, password: $('sPass').value, from: $('sFrom').value, to: $('sTo').value, enabled: $('sEnabled').checked });
   $('sSave').addEventListener('click', async () => { await api('/api/smtp/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(smtpBody()) }); $('sResult').innerHTML = '<span class="ok">✓ Saved</span>'; });
   $('sTest').addEventListener('click', async () => { $('sResult').textContent = 'Sending…'; await api('/api/smtp/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(smtpBody()) });

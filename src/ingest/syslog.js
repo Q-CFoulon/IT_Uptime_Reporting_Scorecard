@@ -27,9 +27,14 @@ const REBOOT_KEYWORDS = /\b(reboot|restart|shutting\s*down|system\s*startup|has\
 const LINUX_BOOT = /\b(startup finished|reached target (multi-user|graphical)|kernel: linux version)\b/i;
 const LINUX_DOWN = /\b(reached target (shutdown|poweroff|reboot)|systemd-shutdown|entering runlevel 0)\b/i;
 
-function classify(msg, host, source) {
-  const idm = msg.match(/\bEvent(?:ID)?\s*[:=]\s*(\d+)/i) || msg.match(/\[(\d{2,5})\]/);
-  const eventId = idm ? parseInt(idm[1], 10) : null;
+// Shared classifier — used by on-wire syslog AND the Azure Monitor connector so both
+// paths categorize identically. eventId may be supplied (Windows Event) or extracted.
+export function classifyLog(message, source, eventId = null) {
+  const msg = message || '';
+  if (eventId == null) {
+    const idm = msg.match(/\bEvent(?:ID)?\s*[:=]\s*(\d+)/i) || msg.match(/\[(\d{2,5})\]/);
+    eventId = idm ? parseInt(idm[1], 10) : null;
+  }
   if (eventId != null && WIN_EVENTS[eventId]) return { category: WIN_EVENTS[eventId], eventId };
 
   if (source === 'nimble' || source === 'msa') {
@@ -42,6 +47,7 @@ function classify(msg, host, source) {
   if (REBOOT_KEYWORDS.test(msg)) return { category: 'reboot_related', eventId };
   return { category: 'other', eventId };
 }
+function classify(msg, host, source) { return classifyLog(msg, source, null); }
 
 function sourceForHost(host, cfg) {
   const h = (host || '').toLowerCase();

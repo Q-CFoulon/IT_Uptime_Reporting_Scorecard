@@ -23,6 +23,12 @@ services:
       CONNECTOR_PERCH_ENABLED: "false"
       PERCH_API_BASE: ""
       PERCH_API_TOKEN: ""
+      # ---- Azure Monitor / Log Analytics (AMA machine logs) — or via the in-app wizard ----
+      CONNECTOR_AZUREMONITOR_ENABLED: "false"
+      AZURE_TENANT_ID: ""
+      AZURE_CLIENT_ID: ""
+      AZURE_CLIENT_SECRET: ""
+      AZURE_WORKSPACE_ID: ""
       # ---- SMTP relay (reports & alerts) — or configure via the in-app wizard ----
       SMTP_PASSWORD: ""
       # ---- Report HTTP upload target (optional) ----

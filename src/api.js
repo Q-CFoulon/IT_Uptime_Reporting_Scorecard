@@ -13,6 +13,7 @@ import { fleetSummary, listMachines, machineDetail, distinctGroups } from './mac
 import { problems, insights, recentSystemEvents } from './selfmonitor.js';
 import { listDashboards, getDashboard, saveDashboard, deleteDashboard, WIDGET_CATALOG } from './dashboards.js';
 import { testDefender } from './connectors/graph.js';
+import { testAzureMonitor } from './connectors/azuremonitor.js';
 import { sendMail } from './smtp.js';
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
@@ -103,6 +104,7 @@ export function startApi(cfg, connectorState) {
         defender: { enabled: cfg.connectors.defender.enabled, tenantId: mask(getSecret('defender.tenantId') || process.env.GRAPH_TENANT_ID), configured: !!cfg.connectors.defender.creds.clientSecret },
         perch: { enabled: cfg.connectors.perch.enabled, configured: !!cfg.connectors.perch.creds.token },
         snmp: { enabled: cfg.connectors.snmp.enabled },
+        azureMonitor: { enabled: cfg.connectors.azureMonitor.enabled, workspaceId: cfg.connectors.azureMonitor.workspaceId || '', tenantId: mask(getSecret('azureMonitor.tenantId') || process.env.AZURE_TENANT_ID), configured: !!cfg.connectors.azureMonitor.creds.clientSecret },
         smtp: { host: cfg.reporting.smtp.host, port: cfg.reporting.smtp.port, secure: cfg.reporting.smtp.secure, emailEnabled: cfg.reporting.destinations.email.enabled },
         apiToken: mask(getSecret('api.token')) });
 
@@ -114,6 +116,19 @@ export function startApi(cfg, connectorState) {
         setSecrets(patch);
         cfg.connectors.defender.enabled = !!b.enabled;
         cfg.connectors.defender.creds = { tenantId: b.tenantId, clientId: b.clientId, clientSecret: b.clientSecret || cfg.connectors.defender.creds.clientSecret };
+        return send(res, 200, { ok: true }); }
+
+      if (path === '/api/connectors/azuremonitor/test' && method === 'POST') { const b = await readBody(req);
+        return send(res, 200, await testAzureMonitor(
+          { tenantId: b.tenantId, clientId: b.clientId, clientSecret: b.clientSecret || cfg.connectors.azureMonitor.creds.clientSecret },
+          b.workspaceId || cfg.connectors.azureMonitor.workspaceId)); }
+      if (path === '/api/connectors/azuremonitor/save' && method === 'POST') { const b = await readBody(req);
+        const patch = { 'azureMonitor.tenantId': b.tenantId, 'azureMonitor.clientId': b.clientId, 'azureMonitor.workspaceId': b.workspaceId, 'azureMonitor.enabled': !!b.enabled };
+        if (b.clientSecret) patch['azureMonitor.clientSecret'] = b.clientSecret;
+        setSecrets(patch);
+        cfg.connectors.azureMonitor.enabled = !!b.enabled;
+        cfg.connectors.azureMonitor.workspaceId = b.workspaceId;
+        cfg.connectors.azureMonitor.creds = { tenantId: b.tenantId, clientId: b.clientId, clientSecret: b.clientSecret || cfg.connectors.azureMonitor.creds.clientSecret };
         return send(res, 200, { ok: true }); }
 
       if (path === '/api/connectors/perch/save' && method === 'POST') { const b = await readBody(req);

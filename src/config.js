@@ -49,6 +49,17 @@ export function loadConfig() {
   };
   if (process.env.CONNECTOR_PERCH_ENABLED !== undefined) c.perch.enabled = process.env.CONNECTOR_PERCH_ENABLED === 'true';
 
+  const az = c.azureMonitor;
+  az.creds = {
+    tenantId: process.env.AZURE_TENANT_ID || getSecret('azureMonitor.tenantId') || c.defender.creds.tenantId || '',
+    clientId: process.env.AZURE_CLIENT_ID || getSecret('azureMonitor.clientId') || '',
+    clientSecret: process.env.AZURE_CLIENT_SECRET || getSecret('azureMonitor.clientSecret') || ''
+  };
+  if (process.env.AZURE_WORKSPACE_ID) az.workspaceId = process.env.AZURE_WORKSPACE_ID;
+  else if (getSecret('azureMonitor.workspaceId')) az.workspaceId = getSecret('azureMonitor.workspaceId');
+  if (process.env.CONNECTOR_AZUREMONITOR_ENABLED !== undefined) az.enabled = process.env.CONNECTOR_AZUREMONITOR_ENABLED === 'true';
+  else if (getSecret('azureMonitor.enabled') != null) az.enabled = !!getSecret('azureMonitor.enabled');
+
   cfg.reporting.smtp.password = process.env.SMTP_PASSWORD || getSecret('smtp.password') || '';
 
   cfg.root = ROOT;

@@ -69,7 +69,17 @@
   "connectors": {
     "defender": { "enabled": false, "pollIntervalMin": 60 },
     "perch":    { "enabled": false, "pollIntervalMin": 240 },
-    "snmp":     { "enabled": false, "pollIntervalMin": 30, "community": "public", "timeoutMs": 2000 }
+    "snmp":     { "enabled": false, "pollIntervalMin": 30, "community": "public", "timeoutMs": 2000 },
+    "azureMonitor": {
+      "enabled": false,
+      "workspaceId": "",
+      "pollIntervalMin": 10,
+      "initialLookbackMin": 60,
+      "heartbeatDownAfterMin": 15,
+      "tables": ["Heartbeat", "Event", "Syslog"],
+      "group": "Azure Monitor",
+      "note": "Log Analytics workspace GUID. Ingests AMA-collected Heartbeat/Event/Syslog. Creds via env AZURE_TENANT_ID/CLIENT_ID/CLIENT_SECRET or the wizard; the Entra app needs 'Log Analytics Reader' on the workspace."
+    }
   },
 
   "reporting": {
