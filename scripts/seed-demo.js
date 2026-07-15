@@ -18,11 +18,8 @@ const { startMs, endMs } = periodRange(period, bh.timezoneOffsetMinutes);
 const intervalMs = cfg.probe.intervalSec * 1000;
 const targets = cfg.probe.targets;
 
-// Inject two outages during business hours: 2.0h on FileServer, 0.75h portal blip.
-const outages = [
-  { target: 'FileServer', startFrac: 0.35, hours: 2.0 },
-  { target: 'WebPortal',  startFrac: 0.62, hours: 0.75 }
-];
+// Inject outages during business hours (add entries referencing your probe target names).
+const outages = [];
 function isDown(name, ts) {
   return outages.some((o) => {
     if (o.target !== name) return false;
@@ -51,10 +48,8 @@ for (let ts = startMs; ts < Math.min(endMs, Date.now()); ts += intervalMs) {
 }
 _db.exec('COMMIT');
 
-// Disk snapshots (latest wins).
-recordDisk(endMs - 1, 'SAN01-NIMBLE-PROD-13700', 16.2e12, 20.8e12); // 77.9%
-recordDisk(endMs - 1, 'SAN01-NIMBLE-COLO-USI', 9.1e12, 20.8e12);   // 43.8%
-recordDisk(endMs - 1, 'MSA', 38.4e12, 43.0e12);                     // 89.3% -> red
+// Disk snapshots — add entries for your SANs, e.g.:
+// recordDisk(endMs - 1, 'YourSAN', usedBytes, totalBytes);
 
 // Event metrics (as if pulled from Defender / Perch / OverWatch report).
 upsertEventMetric(period, 'endpoint', 128934, 6, 2, 'manual');   // Defender OverWatch report
@@ -62,8 +57,6 @@ upsertEventMetric(period, 'ids', 41250000, 214, 3, 'perch-api'); // Perch Hero
 upsertEventMetric(period, 'defender', 47, 12, 4, 'defender-api'); // MS Defender incidents
 
 // Incident-response notices.
-addNotice(startMs + (endMs - startMs) * 0.35, 2, 'FileServer outage — SMB unavailable ~2h');
-addNotice(startMs + (endMs - startMs) * 0.62, 3, 'Web portal degraded — brief 45m interruption');
 
 console.log(`Seeded ${n} probe cycles for period ${period}.`);
 console.log('Start the collector (npm start) and open http://localhost:8080');
