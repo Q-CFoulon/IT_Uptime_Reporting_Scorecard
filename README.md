@@ -41,6 +41,10 @@ with `npm run seed`.
 
 Everything persists under `./data` (SQLite DB, `secrets.json`, generated reports). Back that up.
 
+> **No infrastructure?** [`standalone/index.html`](standalone/) is a single-file, offline version
+> of the same scorecard with manual data entry — just open it in a browser. See
+> [standalone/README.md](standalone/README.md).
+
 ---
 
 ## 2. First-run onboarding

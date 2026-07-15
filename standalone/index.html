@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Uptime &amp; Security Scorecard</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --ink:#1a2330; --muted:#5b6675;
+    --line:#e3e8ef; --line-strong:#cbd5e1;
+    --brand:#0a4b78; --brand-2:#1177b8; --accent:#00a0b0;
+    --good:#1a9e5f; --good-bg:#e7f6ee;
+    --warn:#c9820a; --warn-bg:#fdf3e0;
+    --bad:#cf3838;  --bad-bg:#fbe9e9;
+    --shadow:0 1px 2px rgba(16,32,56,.06),0 4px 14px rgba(16,32,56,.06);
+    --radius:14px;
+  }
+  html[data-theme="dark"]{
+    --bg:#0d131c; --panel:#151d29; --panel-2:#111823; --ink:#e6ecf4; --muted:#96a3b5;
+    --line:#243040; --line-strong:#33465c;
+    --brand:#4aa3e0; --brand-2:#63b6ee; --accent:#2ec7d6;
+    --good:#3fca85; --good-bg:#123122;
+    --warn:#e5a83a; --warn-bg:#3a2c10;
+    --bad:#f0685f;  --bad-bg:#3a1717;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45}
+  h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+  a{color:var(--brand-2)}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 64px}
+
+  /* Header */
+  header{background:linear-gradient(120deg,var(--brand),var(--brand-2));color:#fff;
+    box-shadow:var(--shadow);position:sticky;top:0;z-index:20}
+  .hbar{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .hbar img{height:34px;background:#fff;padding:5px 8px;border-radius:8px}
+  .htext h1{font-size:17px;line-height:1.1}
+  .htext p{margin:2px 0 0;font-size:12px;opacity:.85}
+  .hspace{flex:1}
+  .hctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hctl label{font-size:11px;opacity:.85;display:block;margin-bottom:2px}
+  .hctl input,.hctl select{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);
+    color:#fff;border-radius:8px;padding:6px 9px;font-size:13px;font-family:inherit}
+  .hctl input::placeholder{color:rgba(255,255,255,.7)}
+  .hctl select option{color:#000}
+  .btn{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+    border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--brand-2);color:var(--brand-2)}
+  .btn.pri{background:#fff;color:var(--brand);border-color:#fff}
+  .btn.ghost{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}
+  .btn.ghost:hover{background:rgba(255,255,255,.22);color:#fff}
+  .btn.sm{padding:4px 9px;font-size:12px}
+  .btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+
+  /* Layout cards */
+  .grid{display:grid;gap:18px}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px 20px;margin-top:18px}
+  .card > h2{font-size:15px;display:flex;align-items:center;gap:9px;margin-bottom:3px}
+  .card > h2 .ix{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    background:var(--brand);color:#fff;font-size:14px;flex:none}
+  .sub{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
+
+  /* Scorecard tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--panel-2);position:relative;overflow:hidden}
+  .tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+  .tile .val{font-size:30px;font-weight:720;margin-top:4px;line-height:1;font-variant-numeric:tabular-nums}
+  .tile .val small{font-size:15px;font-weight:600;color:var(--muted)}
+  .tile .meta{font-size:12px;color:var(--muted);margin-top:6px}
+  .tile .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+  .tile.good .bar{background:var(--good)} .tile.warn .bar{background:var(--warn)} .tile.bad .bar{background:var(--bad)} .tile.neutral .bar{background:var(--brand-2)}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:650}
+  .pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+
+  .scoreband{display:grid;grid-template-columns:190px 1fr;gap:22px;align-items:center}
+  @media(max-width:640px){.scoreband{grid-template-columns:1fr}}
+
+  /* Inputs */
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;font-weight:600;color:var(--muted)}
+  .field .hint{font-size:11px;color:var(--muted);font-weight:400;line-height:1.3}
+  .field input,.field select{padding:9px 11px;border:1px solid var(--line-strong);border-radius:9px;
+    background:var(--panel);color:var(--ink);font-size:14px;font-family:inherit;width:100%}
+  .field input:focus,.field select:focus{outline:2px solid var(--brand-2);outline-offset:-1px;border-color:var(--brand-2)}
+  .field input[readonly]{background:var(--panel-2);color:var(--muted)}
+
+  /* Source blocks */
+  .src{border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--panel-2)}
+  .src h4{font-size:13.5px;display:flex;align-items:center;gap:8px}
+  .src .tag{font-size:10.5px;font-weight:600;color:var(--brand-2);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .src .where{font-size:11.5px;color:var(--muted);margin:5px 0 12px;line-height:1.35}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:650}
+  td input,td select{width:100%;padding:6px 8px;border:1px solid var(--line-strong);border-radius:7px;background:var(--panel);color:var(--ink);font-family:inherit;font-size:13px}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .tier-b{display:inline-block;padding:1px 8px;border-radius:6px;font-weight:700;font-size:11.5px}
+  .tier1{background:var(--bad-bg);color:var(--bad)} .tier2{background:var(--warn-bg);color:var(--warn)} .tier3{background:var(--good-bg);color:var(--good)}
+
+  /* Charts */
+  .chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+  .disk-row{display:flex;align-items:center;gap:12px;margin:11px 0}
+  .disk-row .dn{width:210px;font-size:12.5px;font-weight:600}
+  .disk-row .dn small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+  .track{flex:1;height:22px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;overflow:hidden;position:relative}
+  .fill{height:100%;border-radius:6px 0 0 6px;transition:width .3s}
+  .disk-row .pct{width:66px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;font-size:13px}
+  .funnel{margin:10px 0}
+  .funnel .fr{display:flex;align-items:center;gap:10px;margin:6px 0}
+  .funnel .fr .fl{width:96px;font-size:11.5px;color:var(--muted);font-weight:600}
+  .funnel .fbar{height:20px;border-radius:6px;min-width:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-size:11px;font-weight:700}
+  .legend{font-size:11.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  .toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .note{font-size:12px;color:var(--muted);background:var(--panel-2);border:1px dashed var(--line-strong);
+    border-radius:9px;padding:9px 12px;margin-top:6px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.split{grid-template-columns:1fr}}
+  .foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:26px}
+  .hidden{display:none!important}
+  details.help{margin-top:8px}
+  details.help summary{cursor:pointer;font-size:12px;color:var(--brand-2);font-weight:600}
+  details.help div{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  @media print{
+    header{position:static;background:var(--brand)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .no-print{display:none!important}
+    body{background:#fff;font-size:11.5px}
+    section.card{box-shadow:none;break-inside:avoid;page-break-inside:avoid;border-color:#ccc}
+    .fill,.tile .bar,.fbar,.pill,.tier-b,header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .wrap{padding-bottom:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <img id="logo" alt="Nonin">
+    <div class="htext">
+      <h1>IT Uptime &amp; Security Scorecard</h1>
+      <p id="orgline">Monthly service health report</p>
+    </div>
+    <div class="hspace"></div>
+    <div class="hctl no-print">
+      <div>
+        <label for="periodSel">Reporting period</label>
+        <select id="periodSel"></select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button class="btn ghost sm" id="newBtn">+ New</button>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button class="btn ghost sm" id="themeBtn">◐ Theme</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- SCORECARD SUMMARY -->
+  <section class="card" id="summaryCard">
+    <h2><span class="ix">★</span> Scorecard Summary</h2>
+    <div class="sub" id="summarySub">Live results for the selected reporting period.</div>
+    <div class="scoreband">
+      <div id="gaugeWrap"></div>
+      <div class="tiles" id="tiles"></div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="card no-print">
+    <h2><span class="ix">⚙</span> Period Setup</h2>
+    <div class="field-grid">
+      <div class="field">
+        <label>Organization</label>
+        <input id="org" placeholder="Nonin Medical, Inc.">
+      </div>
+      <div class="field">
+        <label>Reporting period label</label>
+        <input id="periodLabel" placeholder="June 2026">
+      </div>
+      <div class="field">
+        <label>Prepared by</label>
+        <input id="preparedBy" placeholder="Quisitive — Managed Security">
+      </div>
+    </div>
+    <div class="toolbar" style="margin-top:14px">
+      <button class="btn pri" id="saveBtn">💾 Save period</button>
+      <button class="btn" id="printBtn">🖨 Print / Save PDF</button>
+      <button class="btn" id="exportBtn">⬇ Export JSON</button>
+      <button class="btn" id="importBtn">⬆ Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+      <button class="btn danger" id="deleteBtn">🗑 Delete period</button>
+    </div>
+    <div class="note">Data is saved locally in this browser (localStorage). Use <b>Export JSON</b> to back up or move periods between machines. Nothing leaves your device.</div>
+  </section>
+
+  <!-- UPTIME -->
+  <section class="card">
+    <h2><span class="ix">↑</span> Uptime Metrics</h2>
+    <div class="sub">Manual log of interruptions/outages. System&nbsp;Uptime&nbsp;% = (Hrs&nbsp;Availability − Hrs&nbsp;Down) ÷ Hrs&nbsp;Availability × 100.</div>
+    <div class="field-grid">
+      <div class="field">
+        <label>Hrs Availability</label>
+        <input type="number" id="hrsAvail" min="0" step="0.5" value="240">
+        <span class="hint">Standard business hours (default 240).</span>
+      </div>
+      <div class="field">
+        <label>Hrs Down</label>
+        <input type="number" id="hrsDown" min="0" step="0.25" value="0">
+        <span class="hint">Full downtime during the period.</span>
+      </div>
+      <div class="field">
+        <label>Hrs Degraded</label>
+        <input type="number" id="hrsDegraded" min="0" step="0.25" value="0">
+        <span class="hint">Major function down, service still operational.</span>
+      </div>
+      <div class="field">
+        <label>System Uptime %</label>
+        <input id="uptimeOut" readonly>
+        <span class="hint">Calculated automatically.</span>
+      </div>
+    </div>
+    <div class="split" style="margin-top:14px">
+      <div class="field">
+        <label>Interruption / outage notes (optional)</label>
+        <input id="uptimeNotes" placeholder="e.g. 2h ERP outage 6/12, patch window 6/20">
+      </div>
+    </div>
+  </section>
+
+  <!-- INCIDENT RESPONSE -->
+  <section class="card">
+    <h2><span class="ix">✉</span> Incident Response Metrics</h2>
+    <div class="sub">Outage notices sent to the company. Tier is determined by impacted resources per the SLA.</div>
+    <table id="noticeTbl">
+      <thead><tr><th style="width:120px">Date</th><th style="width:130px">Tier</th><th>Impacted resource / description</th><th class="no-print" style="width:40px"></th></tr></thead>
+      <tbody id="noticeBody"></tbody>
+    </table>
+    <button class="btn sm no-print" id="addNotice" style="margin-top:10px">+ Add notice</button>
+    <div class="tiles" id="noticeTiles" style="margin-top:16px"></div>
+  </section>
+
+  <!-- EVENT METRICS -->
+  <section class="card">
+    <h2><span class="ix">◎</span> Event Metrics</h2>
+    <div class="sub">Three sources. For each: <b>Data Points</b> analyzed, <b>Escalations</b> raised, and <b>Interventions</b> (escalations that became an incident requiring action).</div>
+    <div class="grid" id="eventBlocks"></div>
+    <div class="chart-row" style="margin-top:18px" id="eventCharts"></div>
+    <div class="tiles" id="eventTiles" style="margin-top:16px"></div>
+  </section>
+
+  <!-- DISK UTILIZATION -->
+  <section class="card">
+    <h2><span class="ix">▤</span> Disk Utilization Metrics</h2>
+    <div class="sub">Production &amp; Backup SANs — used vs. total space (from the array interfaces or SwICE Consulting).</div>
+    <table id="sanTbl">
+      <thead><tr><th>Array</th><th style="width:120px">Used (TB)</th><th style="width:120px">Total (TB)</th><th class="num" style="width:90px">Used %</th><th class="no-print" style="width:40px"></th></tr></thead>
+      <tbody id="sanBody"></tbody>
+    </table>
+    <button class="btn sm no-print" id="addSan" style="margin-top:10px">+ Add array</button>
+    <div id="diskChart" style="margin-top:18px"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--good)"></i> &lt; 70% healthy</span>
+      <span><i class="dot" style="background:var(--warn)"></i> 70–85% monitor</span>
+      <span><i class="dot" style="background:var(--bad)"></i> &gt; 85% action needed</span>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+  <section class="card no-print">
+    <h2><span class="ix">ⓘ</span> Collection Sources &amp; Scoring</h2>
+    <div class="sub">Where each metric comes from, and how the health index is calculated.</div>
+    <details class="help" open><summary>Where each number comes from</summary>
+      <div>
+        <b>Endpoint Security</b> — Defender monthly activity report → “Total OverWatch-analyzed events” (Data Points). Escalations = cases opened to inform of an alert (search “Defender” in the ticket queue, last month). Interventions = tickets requiring action as an incident.<br><br>
+        <b>Intrusion Detection System</b> — Perch Hero Dashboard, range “Last Month”. SOC activity → “Analyzed Logs” (Data Points), “Escalated Alerts” (Escalations). Interventions = escalations that became incidents.<br><br>
+        <b>Microsoft Defender</b> — Incidents dashboard, 1st of last month 00:00 → 1st of this month 00:00. Data Points = incidents (status New/In Progress/Resolved; severity Low/Medium/High). Escalations = incidents acted on (severity Medium/High). Interventions = alerts marked True Positive requiring action.<br><br>
+        <b>Disk</b> — Production &amp; Backup SANs (SAN01-NIMBLE-PROD-13700, SAN01-NIMBLE-COLO-USI, MSA), via array interface or SwICE Consulting.
+      </div>
+    </details>
+    <details class="help"><summary>How the Overall Health Index is scored (adjustable)</summary>
+      <div>The index is a transparent weighted blend. Adjust weights below; they are saved with your settings.
+        <div class="field-grid" style="margin-top:12px">
+          <div class="field"><label>Uptime weight %</label><input type="number" id="wUptime" min="0" max="100" value="50"></div>
+          <div class="field"><label>Disk headroom weight %</label><input type="number" id="wDisk" min="0" max="100" value="25"></div>
+          <div class="field"><label>Security events weight %</label><input type="number" id="wSec" min="0" max="100" value="25"></div>
+        </div>
+        <div style="margin-top:10px;line-height:1.6">
+          • <b>Uptime sub-score</b> = System Uptime % (degraded hours count as half-down).<br>
+          • <b>Disk sub-score</b> = 100 − highest SAN used% (worst array drives the score).<br>
+          • <b>Security sub-score</b> = 100 − (5 × total interventions) − (1 × total escalations), floored at 0.<br>
+          Weights are normalized automatically if they don't total 100.
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+"use strict";
+const LOGO_B64 = "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cD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDUzYgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkVCRkREMTM4RjA4ODExRURCMkVBQjBGOUFCM0FEQzRFIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkVCRkREMTM5RjA4ODExRURCMkVBQjBGOUFCM0FEQzRFIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RUJGREQxMzZGMDg4MTFFREIyRUFCMEY5QUIzQURDNEUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RUJGREQxMzdGMDg4MTFFREIyRUFCMEY5QUIzQURDNEUiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4=";
+document.getElementById('logo').src = "data:image/webp;base64," + LOGO_B64;
+
+const LS_KEY = "itUptimeScorecard.v1";
+const $ = id => document.getElementById(id);
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const fmt = n => (Math.round(n)).toLocaleString();
+const fmt1 = n => n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const EVENT_SOURCES = [
+  {key:"endpoint", name:"Endpoint Security", tag:"Defender OverWatch",
+   where:"Defender monthly report → “Total OverWatch-analyzed events”. Escalations from Defender tickets last month; interventions = tickets actioned as an incident."},
+  {key:"ids", name:"Intrusion Detection System", tag:"Perch Hero",
+   where:"Perch Hero Dashboard (Last Month). Data Points = “Analyzed Logs”, Escalations = “Escalated Alerts”."},
+  {key:"defender", name:"Microsoft Defender", tag:"Incidents dashboard",
+   where:"Defender Incidents dashboard. Data Points = incidents (New/In Progress/Resolved, Low/Med/High). Escalations = Med/High. Interventions = True Positive requiring action."}
+];
+
+function blankPeriod(label){
+  return {
+    id: "p_" + Math.random().toString(36).slice(2,9),
+    org:"Nonin Medical, Inc.", periodLabel: label || "", preparedBy:"Quisitive — Managed Security",
+    uptime:{avail:240, down:0, degraded:0, notes:""},
+    notices:[],
+    events:{ endpoint:{dp:0,esc:0,int:0}, ids:{dp:0,esc:0,int:0}, defender:{dp:0,esc:0,int:0} },
+    sans:[
+      {name:"SAN01-NIMBLE-PROD-13700", used:0, total:0},
+      {name:"SAN01-NIMBLE-COLO-USI",  used:0, total:0},
+      {name:"MSA",                     used:0, total:0}
+    ]
+  };
+}
+
+let store = load();
+function load(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if(s && s.periods && Object.keys(s.periods).length) return s;
+  }catch(e){}
+  const p = blankPeriod(defaultLabel());
+  return { periods:{[p.id]:p}, current:p.id, weights:{uptime:50,disk:25,sec:25}, theme:"light" };
+}
+function defaultLabel(){
+  const d = new Date(); d.setMonth(d.getMonth()-1);
+  return d.toLocaleString(undefined,{month:"long", year:"numeric"});
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(store)); }
+function cur(){ return store.periods[store.current]; }
+
+/* ---------- calculations ---------- */
+function uptimePct(u){
+  if(u.avail<=0) return 0;
+  return Math.max(0, Math.min(100, (u.avail - u.down)/u.avail*100));
+}
+function effectiveUptimePct(u){ // degraded counts as half-down, for health index
+  if(u.avail<=0) return 0;
+  const eff = u.down + u.degraded*0.5;
+  return Math.max(0, Math.min(100, (u.avail - eff)/u.avail*100));
+}
+function eventTotals(ev){
+  let dp=0,esc=0,int=0;
+  for(const k in ev){ dp+=num(ev[k].dp); esc+=num(ev[k].esc); int+=num(ev[k].int); }
+  return {dp,esc,int};
+}
+function worstDisk(sans){
+  let w=0, worstName="—";
+  sans.forEach(s=>{ const p = s.total>0 ? s.used/s.total*100 : 0; if(p>w){w=p;worstName=s.name;} });
+  return {pct:w, name:worstName};
+}
+function securitySub(ev){
+  const t = eventTotals(ev);
+  return Math.max(0, 100 - 5*t.int - 1*t.esc);
+}
+function healthIndex(p){
+  let w = store.weights, sum = num(w.uptime)+num(w.disk)+num(w.sec);
+  if(sum<=0) sum=1;
+  const up = effectiveUptimePct(p.uptime);
+  const disk = 100 - worstDisk(p.sans).pct;
+  const sec = securitySub(p.events);
+  const idx = (up*num(w.uptime) + Math.max(0,disk)*num(w.disk) + sec*num(w.sec))/sum;
+  return {idx:Math.max(0,Math.min(100,idx)), up, disk:Math.max(0,disk), sec};
+}
+function ragUptime(v){ return v>=99.5?"good":v>=98?"warn":"bad"; }
+function ragDisk(v){ return v<70?"good":v<=85?"warn":"bad"; }
+function ragIndex(v){ return v>=90?"good":v>=75?"warn":"bad"; }
+function ragColor(r){ return r==="good"?"var(--good)":r==="warn"?"var(--warn)":"var(--bad)"; }
+
+/* ---------- rendering ---------- */
+function renderAll(){
+  const p = cur();
+  // header + setup fields
+  $("org").value = p.org; $("periodLabel").value = p.periodLabel; $("preparedBy").value = p.preparedBy||"";
+  $("orgline").textContent = (p.org||"Organization") + " · " + (p.periodLabel||"period");
+  $("hrsAvail").value = p.uptime.avail; $("hrsDown").value = p.uptime.down;
+  $("hrsDegraded").value = p.uptime.degraded; $("uptimeNotes").value = p.uptime.notes||"";
+  $("wUptime").value = store.weights.uptime; $("wDisk").value = store.weights.disk; $("wSec").value = store.weights.sec;
+  renderPeriodSelect();
+  renderNotices(); renderEventBlocks(); renderSans();
+  renderSummary(); renderNoticeTiles(); renderEventCharts(); renderDiskChart();
+  $("summarySub").textContent = (p.org||"") + " — " + (p.periodLabel||"") + (p.preparedBy?("  ·  Prepared by "+p.preparedBy):"");
+  const now = new Date();
+  $("foot").textContent = "Generated "+now.toLocaleString()+" · Self-contained local tool · No data leaves this device.";
+}
+
+function renderPeriodSelect(){
+  const sel = $("periodSel"); sel.innerHTML="";
+  Object.values(store.periods).forEach(p=>{
+    const o=document.createElement("option"); o.value=p.id;
+    o.textContent = p.periodLabel || "(untitled)"; if(p.id===store.current)o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+function renderSummary(){
+  const p = cur();
+  const up = uptimePct(p.uptime);
+  const h = healthIndex(p);
+  const disk = worstDisk(p.sans);
+  const ev = eventTotals(p.events);
+  // gauge
+  $("gaugeWrap").innerHTML = gauge(h.idx, ragIndex(h.idx), "Health Index");
+  // tiles
+  const upR = ragUptime(up), diskR = ragDisk(disk.pct);
+  const t = [];
+  t.push(tile("System Uptime", fmt1(up)+"<small>%</small>", upR,
+    p.uptime.down+"h down"+(p.uptime.degraded?(" · "+p.uptime.degraded+"h degraded"):"")+" of "+p.uptime.avail+"h"));
+  t.push(tile("Outage Notices", fmt(p.notices.length), p.notices.length?"warn":"good",
+    tierSummary(p.notices)));
+  t.push(tile("Events Analyzed", fmt(ev.dp), "neutral",
+    fmt(ev.esc)+" escalations · "+fmt(ev.int)+" interventions"));
+  t.push(tile("Peak Disk Use", fmt1(disk.pct)+"<small>%</small>", diskR, disk.name));
+  $("tiles").innerHTML = t.join("");
+}
+function tile(lab,val,rag,meta){
+  return `<div class="tile ${rag}"><div class="bar"></div><div class="lab">${lab}</div>
+    <div class="val">${val}</div><div class="meta">${meta||""}</div></div>`;
+}
+function tierSummary(notices){
+  const c={1:0,2:0,3:0}; notices.forEach(n=>{c[n.tier]=(c[n.tier]||0)+1;});
+  if(!notices.length) return "None sent";
+  return `T1: ${c[1]||0} · T2: ${c[2]||0} · T3: ${c[3]||0}`;
+}
+function gauge(val, rag, label){
+  const r=64, cx=80, cy=80, circ=Math.PI*r; // semicircle
+  const frac=Math.max(0,Math.min(100,val))/100;
+  const col=ragColor(rag);
+  return `<svg viewBox="0 0 160 108" width="100%" style="max-width:190px">
+    <path d="M16 80 A64 64 0 0 1 144 80" fill="none" stroke="var(--line)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M16 80 A64 64 0 0 1 144 80" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round"
+      stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-frac)}"/>
+    <text x="80" y="72" text-anchor="middle" font-size="30" font-weight="720" fill="var(--ink)">${Math.round(val)}</text>
+    <text x="80" y="92" text-anchor="middle" font-size="11" fill="var(--muted)">${label}</text>
+  </svg>`;
+}
+
+function renderNotices(){
+  const b=$("noticeBody"); b.innerHTML="";
+  cur().notices.forEach((n,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="date" value="${n.date||""}" data-i="${i}" data-f="date"></td>
+      <td><select data-i="${i}" data-f="tier">
+        <option value="1"${n.tier==1?" selected":""}>Tier 1 (critical)</option>
+        <option value="2"${n.tier==2?" selected":""}>Tier 2 (major)</option>
+        <option value="3"${n.tier==3?" selected":""}>Tier 3 (minor)</option>
+      </select></td>
+      <td><input value="${(n.desc||"").replace(/"/g,'&quot;')}" data-i="${i}" data-f="desc" placeholder="Impacted resource / summary"></td>
+      <td class="no-print"><button class="btn sm danger" data-del="${i}">✕</button></td>`;
+    b.appendChild(tr);
+  });
+  if(!cur().notices.length){
+    b.innerHTML=`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:14px">No outage notices logged for this period.</td></tr>`;
+  }
+  b.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",e=>{
+    const i=+e.target.dataset.i,f=e.target.dataset.f;
+    cur().notices[i][f]= f==="tier"?+e.target.value:e.target.value; save(); renderSummary(); renderNoticeTiles();
+  }));
+  b.querySelectorAll("[data-del]").forEach(el=>el.addEventListener("click",e=>{
+    cur().notices.splice(+e.target.dataset.del,1); save(); renderNotices(); renderSummary(); renderNoticeTiles();
+  }));
+}
+function renderNoticeTiles(){
+  const c={1:0,2:0,3:0}; cur().notices.forEach(n=>{c[n.tier]=(c[n.tier]||0)+1;});
+  $("noticeTiles").innerHTML =
+    tile("Total notices", fmt(cur().notices.length), cur().notices.length?"warn":"good","Sent to the company") +
+    tile("Tier 1 — Critical", fmt(c[1]||0), (c[1]?"bad":"good"),"Highest SLA impact") +
+    tile("Tier 2 — Major", fmt(c[2]||0), (c[2]?"warn":"good"),"Significant impact") +
+    tile("Tier 3 — Minor", fmt(c[3]||0), "neutral","Limited impact");
+}
+
+function renderEventBlocks(){
+  const wrap=$("eventBlocks"); wrap.innerHTML="";
+  EVENT_SOURCES.forEach(s=>{
+    const d=cur().events[s.key];
+    const el=document.createElement("div"); el.className="src";
+    el.innerHTML=`
+      <h4>${s.name} <span class="tag">${s.tag}</span></h4>
+      <div class="where">${s.where}</div>
+      <div class="field-grid">
+        <div class="field"><label>Data Points</label><input type="number" min="0" value="${d.dp}" data-k="${s.key}" data-f="dp"></div>
+        <div class="field"><label>Escalations</label><input type="number" min="0" value="${d.esc}" data-k="${s.key}" data-f="esc"></div>
+        <div class="field"><label>Interventions</label><input type="number" min="0" value="${d.int}" data-k="${s.key}" data-f="int"></div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+  wrap.querySelectorAll("input").forEach(el=>el.addEventListener("input",e=>{
+    cur().events[e.target.dataset.k][e.target.dataset.f]=num(e.target.value);
+    save(); renderSummary(); renderEventCharts(); renderEventTiles();
+  }));
+  renderEventTiles();
+}
+function renderEventTiles(){
+  const ev=eventTotals(cur().events);
+  const escRate = ev.dp>0 ? (ev.esc/ev.dp*100) : 0;
+  const intRate = ev.esc>0 ? (ev.int/ev.esc*100) : 0;
+  $("eventTiles").innerHTML =
+    tile("Total Data Points", fmt(ev.dp), "neutral","Across all three sources") +
+    tile("Total Escalations", fmt(ev.esc), ev.esc?"warn":"good", escRate.toFixed(3)+"% of data points") +
+    tile("Total Interventions", fmt(ev.int), ev.int?"bad":"good","Became actionable incidents") +
+    tile("Escalation→Incident", (ev.esc?intRate.toFixed(1):"0")+"<small>%</small>", intRate>50?"warn":"neutral","Interventions ÷ escalations");
+}
+function renderEventCharts(){
+  const wrap=$("eventCharts"); wrap.innerHTML="";
+  EVENT_SOURCES.forEach(s=>{
+    const d=cur().events[s.key];
+    const max=Math.max(d.dp, d.esc, d.int, 1);
+    const w = v => Math.max(2, v/max*100);
+    const box=document.createElement("div"); box.className="src";
+    box.innerHTML=`<h4>${s.name}</h4>
+      <div class="funnel">
+        <div class="fr"><span class="fl">Data Points</span><div class="fbar" style="width:${w(d.dp)}%;background:var(--brand-2)">${fmt(d.dp)}</div></div>
+        <div class="fr"><span class="fl">Escalations</span><div class="fbar" style="width:${w(d.esc)}%;background:var(--warn)">${fmt(d.esc)}</div></div>
+        <div class="fr"><span class="fl">Interventions</span><div class="fbar" style="width:${w(d.int)}%;background:var(--bad)">${fmt(d.int)}</div></div>
+      </div>`;
+    wrap.appendChild(box);
+  });
+}
+
+function renderSans(){
+  const b=$("sanBody"); b.innerHTML="";
+  cur().sans.forEach((s,i)=>{
+    const pct = s.total>0 ? (s.used/s.total*100) : 0;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input value="${(s.name||"").replace(/"/g,'&quot;')}" data-i="${i}" data-f="name"></td>
+      <td><input type="number" min="0" step="0.1" value="${s.used}" data-i="${i}" data-f="used"></td>
+      <td><input type="number" min="0" step="0.1" value="${s.total}" data-i="${i}" data-f="total"></td>
+      <td class="num" style="color:${ragColor(ragDisk(pct))};font-weight:700">${fmt1(pct)}%</td>
+      <td class="no-print"><button class="btn sm danger" data-del="${i}">✕</button></td>`;
+    b.appendChild(tr);
+  });
+  b.querySelectorAll("input").forEach(el=>el.addEventListener("input",e=>{
+    const i=+e.target.dataset.i,f=e.target.dataset.f;
+    cur().sans[i][f]= f==="name"?e.target.value:num(e.target.value);
+    save(); renderSans(); renderSummary(); renderDiskChart();
+  }));
+  b.querySelectorAll("[data-del]").forEach(el=>el.addEventListener("click",e=>{
+    cur().sans.splice(+e.target.dataset.del,1); save(); renderSans(); renderSummary(); renderDiskChart();
+  }));
+}
+function renderDiskChart(){
+  const wrap=$("diskChart"); wrap.innerHTML="";
+  cur().sans.forEach(s=>{
+    const pct = s.total>0 ? Math.min(100,s.used/s.total*100) : 0;
+    const rag=ragDisk(pct), col=ragColor(rag);
+    const row=document.createElement("div"); row.className="disk-row";
+    row.innerHTML=`
+      <div class="dn">${s.name||"(unnamed)"}<small>${fmt1(s.used)} / ${fmt1(s.total)} TB</small></div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="pct" style="color:${col}">${fmt1(pct)}%</div>`;
+    wrap.appendChild(row);
+  });
+  if(!cur().sans.length) wrap.innerHTML=`<div style="color:var(--muted)">No arrays configured.</div>`;
+}
+
+/* ---------- events / wiring ---------- */
+function bindField(id, apply){
+  $(id).addEventListener("input", e=>{ apply(e.target.value); save(); });
+}
+$("org").addEventListener("input",e=>{cur().org=e.target.value; $("orgline").textContent=(cur().org||"Organization")+" · "+(cur().periodLabel||"period"); save(); renderSummary();});
+$("preparedBy").addEventListener("input",e=>{cur().preparedBy=e.target.value; save(); renderSummary();});
+$("periodLabel").addEventListener("input",e=>{cur().periodLabel=e.target.value; save(); renderPeriodSelect(); $("orgline").textContent=(cur().org||"Organization")+" · "+(cur().periodLabel||"period"); renderSummary();});
+
+["hrsAvail","hrsDown","hrsDegraded"].forEach(id=>{
+  $(id).addEventListener("input",()=>{
+    const u=cur().uptime;
+    u.avail=num($("hrsAvail").value); u.down=num($("hrsDown").value); u.degraded=num($("hrsDegraded").value);
+    $("uptimeOut").value = fmt1(uptimePct(u))+" %";
+    save(); renderSummary();
+  });
+});
+$("uptimeNotes").addEventListener("input",e=>{cur().uptime.notes=e.target.value; save();});
+
+["wUptime","wDisk","wSec"].forEach(id=>{
+  $(id).addEventListener("input",()=>{
+    store.weights={uptime:num($("wUptime").value),disk:num($("wDisk").value),sec:num($("wSec").value)};
+    save(); renderSummary();
+  });
+});
+
+$("addNotice").addEventListener("click",()=>{
+  cur().notices.push({date:"",tier:2,desc:""}); save(); renderNotices(); renderSummary(); renderNoticeTiles();
+});
+$("addSan").addEventListener("click",()=>{
+  cur().sans.push({name:"",used:0,total:0}); save(); renderSans(); renderSummary(); renderDiskChart();
+});
+
+$("periodSel").addEventListener("change",e=>{ store.current=e.target.value; save(); renderAll(); });
+$("newBtn").addEventListener("click",()=>{
+  const p=blankPeriod(""); store.periods[p.id]=p; store.current=p.id; save(); renderAll();
+  $("periodLabel").focus();
+});
+$("saveBtn").addEventListener("click",()=>{ save(); flash($("saveBtn"),"✓ Saved"); });
+$("deleteBtn").addEventListener("click",()=>{
+  if(Object.keys(store.periods).length<=1){ alert("Cannot delete the only period. Create another first."); return; }
+  if(!confirm("Delete period \""+(cur().periodLabel||"untitled")+"\"? This cannot be undone.")) return;
+  delete store.periods[store.current]; store.current=Object.keys(store.periods)[0]; save(); renderAll();
+});
+$("printBtn").addEventListener("click",()=>window.print());
+
+$("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="uptime-scorecard-"+(cur().periodLabel||"export").replace(/\s+/g,"-")+".json"; a.click();
+});
+$("importBtn").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const data=JSON.parse(r.result);
+    if(data.periods){ store=data; if(!store.weights)store.weights={uptime:50,disk:25,sec:25};
+      if(!store.current||!store.periods[store.current])store.current=Object.keys(store.periods)[0];
+      save(); renderAll(); alert("Imported "+Object.keys(store.periods).length+" period(s).");
+    } else if(data.uptime){ // single period
+      store.periods[data.id||("p_"+Date.now())]=data; store.current=data.id; save(); renderAll();
+    } else alert("Unrecognized file format.");
+  }catch(err){ alert("Could not read file: "+err.message); } };
+  r.readAsText(f); e.target.value="";
+});
+
+$("themeBtn").addEventListener("click",()=>{
+  const t=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",t); store.theme=t; save();
+});
+function flash(btn,txt){ const o=btn.textContent; btn.textContent=txt; setTimeout(()=>btn.textContent=o,1200); }
+
+/* init */
+document.documentElement.setAttribute("data-theme", store.theme||"light");
+$("uptimeOut").value = fmt1(uptimePct(cur().uptime))+" %";
+renderAll();
+</script>
+</body>
+</html>
